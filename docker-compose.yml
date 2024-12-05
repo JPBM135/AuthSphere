@@ -1,0 +1,24 @@
+name: 'auth-sphere-compose'
+
+services:
+  postgres:
+    image: postgres:17.2
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'test'
+      POSTGRES_DB: 'authsphere'
+    volumes:
+      - auth-sphere-postgres:/var/lib/postgresql/data
+    expose:
+      - '4433'
+    ports:
+      - '127.0.0.1:4433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U authsphere']
+      interval: 10s
+      timeout: 5s
+    restart: unless-stopped
+
+volumes:
+  auth-sphere-postgres:
+    name: auth-sphere-postgres
