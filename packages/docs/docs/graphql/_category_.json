@@ -1,0 +1,8 @@
+{
+  "label": "API - Graphql",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "GraphQL API documentation"
+  }
+}
