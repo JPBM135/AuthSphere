@@ -1,0 +1,41 @@
+<div
+  class="fixed bottom-10 left-10 z-[10000] flex flex-col items-start justify-start gap-4 bg-transparent transition-all"
+  aria-live="assertive"
+  aria-atomic="true"
+  role="alert"
+>
+  @for (alert of alerts(); track alert.id) {
+    <div
+      [@slideInOutAnimation]="alert.animationState()"
+      [@heightGrow]
+      (@slideInOutAnimation.done)="animationHandler(alert)"
+      class="relative flex flex-shrink-0 flex-col items-start justify-center gap-2 overflow-y-hidden rounded-md bg-white/50 p-5 drop-shadow-md dark:bg-gray-800/50"
+    >
+      <div class="flex items-center justify-center gap-2">
+        <mat-icon
+          fontSet="material-symbols-outlined"
+          class="text-{{ themes[alert.theme()].color }} min-w-6"
+        >
+          {{ themes[alert.theme()].icon }}
+        </mat-icon>
+        <span class="text-text-light dark:text-text-dark font-mono font-medium max-sm:text-base">{{
+          alert.message()
+        }}</span>
+      </div>
+      @if (alert.progress() && alert.theme() !== 'success') {
+        <div class="grid w-full min-w-80 grid-cols-[1fr_auto] items-center gap-4 rounded-md">
+          <mat-progress-bar
+            mode="determinate"
+            [value]="alert.progress()"
+            class="h-2 rounded-md"
+          ></mat-progress-bar>
+          @if (alert.progress()! < 100) {
+            <div class="text-color-secondary">({{ alert.eta?.() ?? '' }})</div>
+          } @else {
+            <div class="text-color-secondary">({{ 'ALERT_CARD.PROCESSING' | translate }})</div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
