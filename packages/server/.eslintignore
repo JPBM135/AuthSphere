@@ -1,8 +1,0 @@
-.yarn/
-dist/
-node_modules/
-locales/
-!locales/en-US/
-
-src/generated/graphql.types.ts
-src/modules/**/generated/module-types.graphql.ts

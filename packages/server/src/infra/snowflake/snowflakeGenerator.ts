@@ -26,9 +26,11 @@ export class SnowflakeGenerator {
 		);
 	}
 
-	public generate(): bigint {
-		return this.generator.generate({
-			processId: this.machineId,
-		});
+	public generate(): string {
+		return this.generator
+			.generate({
+				processId: this.machineId,
+			})
+			.toString();
 	}
 }

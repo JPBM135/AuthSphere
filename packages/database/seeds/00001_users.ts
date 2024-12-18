@@ -1,4 +1,4 @@
-import type {} from '../src/common/types/knex';
+import type {} from '../../server/src/common/types/knex';
 import type { Knex } from 'knex';
 
 const TABLE_NAME = 'users';

@@ -5,4 +5,5 @@ locales/
 !locales/en-US/
 
 src/generated/graphql.types.ts
+src/generated/database.types.ts
 src/modules/**/generated/module-types.graphql.ts

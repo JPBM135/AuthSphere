@@ -5,6 +5,7 @@ import { createToken, registerToken } from '../container/createToken.js';
 import type { Provider } from '../container/types.js';
 import Logger from '../logger/index.js';
 import { Repository, type RepositoryAcceptedTables } from './Repository.js';
+import { KeysRepository } from './keys/KeysRepository.js';
 
 const logger = Logger.getInstance().createChildren('Repositories');
 
@@ -13,6 +14,7 @@ type RepositoriesMap = {
 };
 
 export const RepositoriesToken = createToken<RepositoriesMap>('Repositories');
+export const KeysRepositoryToken = createToken<KeysRepository>('KeysRepository');
 
 export function createRepositories(): Provider<typeof RepositoriesToken> {
 	logger.info('Creating repositories');
@@ -28,6 +30,8 @@ export function createRepositories(): Provider<typeof RepositoriesToken> {
 		Reflect.set(repositories, toCamelCase(table) + 'Repository', repository);
 		logger.debug(`Repository created for table ${table} (${toCamelCase(table)})`);
 	}
+
+	registerToken(KeysRepositoryToken, new KeysRepository());
 
 	registerToken(RepositoriesToken, repositories as RepositoriesMap);
 

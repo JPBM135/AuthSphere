@@ -11,6 +11,25 @@ export class TimeSpan {
 	}
 
 	/**
+	 * Creates a TimeSpan from the current time.
+	 *
+	 * @returns A TimeSpan instance representing the current time.
+	 */
+	public static fromNow(): TimeSpan {
+		return new TimeSpan(Date.now());
+	}
+
+	/**
+	 * Creates a TimeSpan from a Date object.
+	 *
+	 * @param date - The Date object.
+	 * @returns A TimeSpan instance representing the Date.
+	 */
+	public static fromDate(date: Date): TimeSpan {
+		return new TimeSpan(date.getTime());
+	}
+
+	/**
 	 * Creates a TimeSpan from milliseconds.
 	 *
 	 * @param milliseconds - The number of milliseconds.
@@ -74,8 +93,8 @@ export class TimeSpan {
 	 *
 	 * @returns The total seconds.
 	 */
-	public seconds(): number {
-		return this._milliseconds / TIMES_IN_MILLISECONDS.SECOND;
+	public seconds(round = true): number {
+		return this.divideWithConditionalRound(TIMES_IN_MILLISECONDS.SECOND, round);
 	}
 
 	/**
@@ -83,8 +102,8 @@ export class TimeSpan {
 	 *
 	 * @returns The total minutes.
 	 */
-	public minutes(): number {
-		return this._milliseconds / TIMES_IN_MILLISECONDS.MINUTE;
+	public minutes(round = true): number {
+		return this.divideWithConditionalRound(TIMES_IN_MILLISECONDS.MINUTE, round);
 	}
 
 	/**
@@ -92,8 +111,8 @@ export class TimeSpan {
 	 *
 	 * @returns The total hours.
 	 */
-	public hours(): number {
-		return this._milliseconds / TIMES_IN_MILLISECONDS.HOUR;
+	public hours(round = true): number {
+		return this.divideWithConditionalRound(TIMES_IN_MILLISECONDS.HOUR, round);
 	}
 
 	/**
@@ -101,8 +120,8 @@ export class TimeSpan {
 	 *
 	 * @returns The total days.
 	 */
-	public days(): number {
-		return this._milliseconds / TIMES_IN_MILLISECONDS.DAY;
+	public days(round = true): number {
+		return this.divideWithConditionalRound(TIMES_IN_MILLISECONDS.DAY, round);
 	}
 
 	/**
@@ -193,5 +212,31 @@ export class TimeSpan {
 	 */
 	public greaterThanOrEqual(other: TimeSpan): boolean {
 		return this._milliseconds >= other._milliseconds;
+	}
+
+	/**
+	 * Checks if this TimeSpan is in the past.
+	 */
+	public isPast(): boolean {
+		return this.lessThan(TimeSpan.fromNow());
+	}
+
+	/**
+	 * Checks if this TimeSpan is in the future.
+	 */
+	public isFuture(): boolean {
+		return this.greaterThan(TimeSpan.fromNow());
+	}
+
+	public toString(): string {
+		return this._milliseconds.toString();
+	}
+
+	public toIsoString(): string {
+		return new Date(this._milliseconds).toISOString();
+	}
+
+	private divideWithConditionalRound(divisor: number, round: boolean): number {
+		return round ? Math.round(this._milliseconds / divisor) : this._milliseconds / divisor;
 	}
 }

@@ -7,10 +7,13 @@ export async function createContext(context: ExpressContextFunctionArgument): Pr
 	const sentry = resolveToken(SentryToken);
 
 	return {
+		req: context.req,
+		res: context.res,
 		token: context.req.headers.token as string,
 		sentrySpan: sentry.startInactiveSpan({
 			op: 'graphql',
 			name: 'graphql',
 		}),
+		authUser: null,
 	};
 }

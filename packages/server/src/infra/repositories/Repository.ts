@@ -16,11 +16,23 @@ export type RepositoryAcceptedTables = Exclude<
 	'knex_migrations_lock' | 'knex_migrations'
 >;
 
+type RepositoryWhereClause<T extends RepositoryAcceptedTables> =
+	| Partial<TableTypes[T]['input']>
+	| string
+	| ((builder: Knex.QueryBuilder<Knex.TableType<T>>) => Knex.QueryBuilder<Knex.TableType<T>>);
+
+/**
+ * A generic repository for database operations
+ *
+ * @typeParam T - The table to operate on
+ *
+ * All methods will throw a `ServerInternalError` if an internal database error occurs
+ */
 export class Repository<
 	T extends RepositoryAcceptedTables,
 	SelectResult = TableTypes[T]['select'],
 	InsertData = TableTypes[T]['input'],
-	WhereData = Exclude<Parameters<Knex.QueryBuilder<Knex.TableType<T>>['where']>[0], string>,
+	WhereData = RepositoryWhereClause<T>,
 > {
 	protected readonly logger: Logger;
 
@@ -43,17 +55,39 @@ export class Repository<
 		this.tableDefinition = tables[table];
 	}
 
-	public async get(id: string): Promise<SelectResult | null> {
+	/**
+	 * Get a single resource from the database
+	 *
+	 * @param idOrWhere - The id or where clause to use, if a string is passed it will be treated as the id column
+	 * @returns The resource or null if not found
+	 */
+	public async get(idOrWhere: WhereData): Promise<SelectResult | null> {
 		try {
-			return (await this.db(this.table).select('*').where({ id }).first()) ?? null;
+			return (
+				(await this.db(this.table)
+					.select('*')
+					.where(
+						typeof idOrWhere === 'string'
+							? { id: idOrWhere }
+							: (idOrWhere as Record<string, unknown>),
+					)
+					.first()) ?? null
+			);
 		} catch (error) {
-			this.logger.error(`Internal database error on ${this.table} (get)`, error, { id });
+			this.logger.error(`Internal database error on ${this.table} (get)`, error, { idOrWhere });
 			throwGraphqlError('Internal database error', ErrorCodes.ServerInternalError);
 		}
 	}
 
-	public async getOrThrow(id: string): Promise<SelectResult> {
-		const result = await this.get(id);
+	/**
+	 * Get a single resource from the database or throw an error if not found
+	 *
+	 * @param idOrWhere - The id or where clause to use, if a string is passed it will be treated as the id column
+	 * @returns The resource
+	 * @throws If the resource is not found
+	 */
+	public async getOrThrow(idOrWhere: WhereData): Promise<SelectResult> {
+		const result = await this.get(idOrWhere);
 
 		if (!result) {
 			throwGraphqlError(`${this.readableTable} not found`, `${this.table}/not-found`);
@@ -62,6 +96,12 @@ export class Repository<
 		return result;
 	}
 
+	/**
+	 * Create a new resource in the database
+	 *
+	 * @param data - The data to insert, if the table has an id column and it's not provided it will be generated
+	 * @param returning - Whether to return the created resource, defaults to true
+	 */
 	public async create(data: InsertData, returning: false): Promise<null>;
 	public async create(data: InsertData, returning?: true): Promise<SelectResult>;
 	public async create(data: InsertData, returning = true): Promise<SelectResult | null> {
@@ -85,6 +125,13 @@ export class Repository<
 		}
 	}
 
+	/**
+	 * Update a resource in the database
+	 *
+	 * @param id - The id of the resource to update
+	 * @param data - The data to update, the id field will be ignored
+	 * @param returning - Whether to return the updated resource, defaults to true
+	 */
 	public async update(
 		id: string,
 		data: Partial<TypedOmit<TableTypes[T]['input'], 'id'>>,
@@ -101,6 +148,10 @@ export class Repository<
 		returning: boolean = true,
 	): Promise<SelectResult | null> {
 		try {
+			if ((data as Record<string, unknown>).id) {
+				Reflect.deleteProperty(data, 'id');
+			}
+
 			const query = this.db(this.table).update(data).where({ id });
 
 			if (returning) {
@@ -116,6 +167,11 @@ export class Repository<
 		}
 	}
 
+	/**
+	 * Delete a resource from the database
+	 *
+	 * @param id - The id of the resource to delete
+	 */
 	public async delete(id: string): Promise<void> {
 		try {
 			await this.db(this.table).delete().where({ id });
@@ -125,7 +181,12 @@ export class Repository<
 		}
 	}
 
-	public async list(where: WhereData): Promise<SelectResult[]> {
+	/**
+	 * List resources from the database
+	 *
+	 * @param where - The where clause to use
+	 */
+	public async list(where: Exclude<WhereData, string>): Promise<SelectResult[]> {
 		try {
 			return await this.db(this.table)
 				.select('*')
@@ -136,6 +197,11 @@ export class Repository<
 		}
 	}
 
+	/**
+	 * Get a query builder for the table
+	 *
+	 * @returns A query builder for the table
+	 */
 	public query(): Knex.QueryBuilder<Knex.TableType<T>> {
 		return this.db.from(this.table);
 	}

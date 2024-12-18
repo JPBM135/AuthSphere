@@ -1,4 +1,4 @@
-import { assertConfig } from '../../common/assertConfig/assertConfig.js';
+import { assertConfig } from '../../common/assert/assertConfig.js';
 import { CONFIG } from '../../config.js';
 import { createToken, registerToken } from '../container/createToken.js';
 import type { Provider } from '../container/types.js';
